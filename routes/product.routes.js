@@ -4,7 +4,10 @@ const {
     getAllProducts,
     getProductById,
     createProduct,
+    initiatePayUPayment,
 } = require('../controllers/product.controller');
+// PayU payment initiation route
+router.post('/payu-payment', initiatePayUPayment);
 const { protect } = require('../middleware/auth.middleware');
 
 // Public routes

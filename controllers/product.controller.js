@@ -1,3 +1,43 @@
+const axios = require('axios');
+const crypto = require('crypto');
+
+// @desc    Initiate PayU Payment
+// @route   POST /api/products/payu-payment
+exports.initiatePayUPayment = async (req, res) => {
+    /*
+      Required fields from frontend:
+      amount, productinfo, firstname, email, phone, txnid (unique), surl, furl
+    */
+    const { amount, productinfo, firstname, email, phone, txnid, surl, furl } = req.body;
+    const key = process.env.PAYU_MERCHANT_KEY;
+    const salt = process.env.PAYU_MERCHANT_SALT;
+    const payuBaseUrl = process.env.PAYU_BASE_URL || 'https://test.payu.in';
+    if (!key || !salt) {
+        return res.status(500).json({ message: 'PayU credentials not set' });
+    }
+    // Generate hash string
+    const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
+    const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+    // Prepare PayU payment params
+    const payuParams = {
+        key,
+        txnid,
+        amount,
+        productinfo,
+        firstname,
+        email,
+        phone,
+        surl,
+        furl,
+        hash,
+        service_provider: 'payu_paisa',
+    };
+    // Send params to frontend to post to PayU, or redirect from backend if desired
+    res.json({
+        payuUrl: `${payuBaseUrl}/_payment`,
+        params: payuParams
+    });
+};
 const Product = require('../models/product.model');
 
 // @desc    Get all products
@@ -247,6 +287,20 @@ exports.getProductById = async (req, res) => {
  *                 type: string
  *               categoryId:
  *                 type: number
+ *           examples:
+ *             demo:
+ *               value:
+ *                 id: 1
+ *                 name: 'Demo Product'
+ *                 price:
+ *                   - size: 'M'
+ *                     amount: 100
+ *                 image:
+ *                   - 'https://example.com/image.jpg'
+ *                 description: 'A demo product'
+ *                 manufacturer: 'Demo Maker'
+ *                 SKU: 'DEMO-001'
+ *                 category: 'textiles'
  *     responses:
  *       201:
  *         description: Product created successfully

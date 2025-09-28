@@ -1,4 +1,5 @@
 const express = require('express');
+const morgan = require('morgan');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const passport = require('passport');
@@ -9,39 +10,7 @@ const connectDB = require('./config/db');
 // Load env vars
 dotenv.config();
 
-// Swagger options
-const swaggerOptions = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Indikara Backend API',
-            version: '1.0.0',
-            description: 'API for authentication, products, and health checks',
-        },
-        servers: [
-            {
-                url: `http://localhost:${process.env.PORT || 5000}`,
-                description: 'Development server',
-            },
-        ],
-        components: {
-            securitySchemes: {
-                bearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT',
-                },
-            },
-        },
-        security: [
-            {
-                bearerAuth: [],
-            },
-        ],
-    },
-    apis: ['./controllers/*.js'], // Path to the API docs
-};
-
+const swaggerOptions = require('./swagger.config');
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Connect to database
@@ -51,10 +20,17 @@ const app = express();
 
 // Body parser middleware
 app.use(express.json());
+// HTTP request logging in dev
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.urlencoded({ extended: false }));
 
-// CORS middleware
-app.use(cors());
+// CORS middleware with specific options
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Vite's default development port
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 
 // Passport middleware
 app.use(passport.initialize());
@@ -71,6 +47,13 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/products', require('./routes/product.routes'));
 app.use('/api/health', require('./routes/health.routes'));
+app.use('/api/orders', require('./routes/order.routes'));
+// PayU webhook (no auth - PayU will POST here)
+app.use('/api/payu', require('./routes/payu.routes'));
+// Admin routes (webhook viewer)
+app.use('/api/admin', require('./routes/admin.routes'));
+// User routes (profile, admin user management)
+app.use('/api/users', require('./routes/user.routes'));
 
 const PORT = process.env.PORT || 5000;
 

@@ -22,6 +22,14 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true // Allows multiple documents to have a null value
     },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
+    isDemo: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });

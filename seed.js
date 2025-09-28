@@ -16,10 +16,10 @@ const productsData = [
           id: 10001,
           name: "APIYA",
           price: [
-            {size: "6 x 9 ft", amount: 220000},
-            {size: "8 x 10 ft", amount: 310000},
-            {size: "9 x 12 ft", amount: 391230},
-            {size: "10 x 14 ft", amount: 480000}
+            {size: "6 x 9 ft", amount: 2200},
+            {size: "8 x 10 ft", amount: 31000},
+            {size: "9 x 12 ft", amount: 39123},
+            {size: "10 x 14 ft", amount: 48000}
           ],
           image: [
             '../../assets/products/rugs/mirzapur_rugs/apiya/1.webp',
@@ -50,7 +50,7 @@ const productsData = [
         {
           id: 10002,
           name: "AMBROSIA",
-          price: [{size: "9 x 12 ft", amount: 289800}],
+          price: [{size: "9 x 12 ft", amount: 28980}],
           image: [
             "../../assets/products/rugs/mirzapur_rugs/ambrosia/1.webp",
             "../../assets/products/rugs/mirzapur_rugs/ambrosia/2.webp",
@@ -78,7 +78,7 @@ const productsData = [
         {
           id: 10003,
           name: "ASTARA",
-          price: [{size: "2.6 x 6 ft", amount: 42525}, {size: "4 x 6 ft", amount: 59250}, {size: "5 x 7 ft", amount: 99225}],
+          price: [{size: "2.6 x 6 ft", amount: 4252}, {size: "4 x 6 ft", amount: 5925}, {size: "5 x 7 ft", amount: 9922}],
           image: [
             "../../assets/products/rugs/mirzapur_rugs/astara/1.webp",
             "../../assets/products/rugs/mirzapur_rugs/astara/2.webp",

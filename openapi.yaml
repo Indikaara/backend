@@ -140,20 +140,26 @@ components:
         receivedAt:
           type: string
           format: date-time
+    CreateOrderProductItem:
+      type: object
+      properties:
+        product:
+          type: string
+          description: Product ObjectId or SKU
+        quantity:
+          type: number
+
     CreatePendingRequest:
       type: object
       properties:
         products:
           type: array
           items:
-            $ref: '#/components/schemas/OrderProductItem'
+            $ref: '#/components/schemas/CreateOrderProductItem'
         shippingAddress:
           type: object
-        totalPrice:
-          type: number
       required:
         - products
-        - totalPrice
     CreatePendingResponse:
       type: object
       properties:
@@ -576,6 +582,46 @@ paths:
           description: Invalid hash or payment
         '403':
           description: Forbidden (IP not allowed)
+  /api/payu/initiate:
+    post:
+      summary: Initiate PayU hosted checkout for a pending order (server computes amount)
+      tags:
+        - PayU
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: string
+            examples:
+              demo:
+                value:
+                  orderId: order_12345
+      responses:
+        '200':
+          description: Payment form data and payment URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  formData:
+                    type: object
+                  paymentUrl:
+                    type: string
+              examples:
+                demo:
+                  value:
+                    formData:
+                      key: your_key
+                      txnid: tx_12345
+                      amount: '100'
+                    paymentUrl: https://secure.payu.in/_payment
   /api/products:
     get:
       summary: Get all products

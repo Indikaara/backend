@@ -139,6 +139,13 @@
           }
         }
       },
+      "CreateOrderProductItem": {
+        "type": "object",
+        "properties": {
+          "product": { "type": "string", "description": "Product ObjectId or SKU" },
+          "quantity": { "type": "number" }
+        }
+      },
       "Order": {
         "type": "object",
         "properties": {
@@ -218,20 +225,14 @@
           "products": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/OrderProductItem"
+              "$ref": "#/components/schemas/CreateOrderProductItem"
             }
           },
           "shippingAddress": {
             "type": "object"
-          },
-          "totalPrice": {
-            "type": "number"
           }
         },
-        "required": [
-          "products",
-          "totalPrice"
-        ]
+        "required": ["products"]
       },
       "CreatePendingResponse": {
         "type": "object",
@@ -846,6 +847,74 @@
         }
       }
     },
+    "/api/payu/initiate": {
+      "post": {
+        "summary": "Initiate PayU Hosted Checkout for an order",
+        "tags": [
+          "PayU"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderId": { "type": "string" }
+                },
+                "required": ["orderId"]
+              },
+              "examples": {
+                "sample": { "value": { "orderId": "650f2a3b4c5d6e7f8a9b0c11" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns PayU hosted checkout form data and payment URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formData": { "type": "object" },
+                    "paymentUrl": { "type": "string" }
+                  }
+                },
+                "examples": {
+                  "sample": {
+                    "value": {
+                      "formData": {
+                        "key": "your_merchant_key",
+                        "txnid": "tx_1700000000000_1234",
+                        "amount": "1999.00",
+                        "productinfo": "Order #650f2a3b...",
+                        "firstname": "Demo",
+                        "email": "demo@example.com",
+                        "surl": "https://yourdomain.com/pay-success",
+                        "furl": "https://yourdomain.com/pay-fail",
+                        "service_provider": "payu_paisa",
+                        "hash": "<sha512-hash-goes-here>"
+                      },
+                      "paymentUrl": "https://test.payu.in/_payment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request (e.g. order not found or referenced product missing)" },
+          "401": { "description": "Unauthorized" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
     "/api/payu/webhook": {
       "post": {
         "summary": "PayU webhook endpoint (receives payment notifications)",
@@ -894,7 +963,9 @@
                     "firstname": "Demo",
                     "email": "demo@example.com",
                     "status": "success",
-                    "hash": "..."
+                    "hash": "...",
+                    "products": "[{\"product\":\"650f2a3b4c5d6e7f8a9b0c11\",\"quantity\":1}]",
+                    "totalPrice": "100"
                   }
                 }
               }
