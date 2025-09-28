@@ -49,7 +49,6 @@ class PayUService {
                 phone: phone,
                 surl: `${orderData.baseUrl}${payuConfig.successUrl}`,
                 furl: `${orderData.baseUrl}${payuConfig.failureUrl}`,
-                service_provider: 'payu_paisa',
                 lastname: '',
                 address1: '',
                 address2: '',
@@ -88,15 +87,37 @@ class PayUService {
     }
 
     static generatePaymentHash({ txnid, amount, productinfo, firstname, email }) {
+        // Validate all required inputs
+        if (!txnid || !amount || !productinfo || !firstname || !email) {
+            throw new Error('All hash parameters are required: txnid, amount, productinfo, firstname, email');
+        }
+
         const key = payuConfig.merchantKey;
         const salt = payuConfig.merchantSalt;
         
         if (!key || !salt) {
             throw new Error('PayU merchant key or salt not configured');
         }
+
+        // Ensure amount has exactly 2 decimal places
+        const cleanAmount = Number(amount).toFixed(2);
         
-        // PayU hash sequence: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT)
-        const hashString = `${key}|${txnid}|${amount}|${productinfo}|${firstname}|${email}|||||||||||${salt}`;
+        // Clean and validate input values according to PayU requirements
+        const cleanTxnid = String(txnid).trim();
+        const cleanProductInfo = String(productinfo).trim()
+            .replace(/[^a-zA-Z0-9\s-_]/g, ''); // Only allow alphanumeric, space, hyphen, underscore
+        const cleanFirstname = String(firstname).trim()
+            .replace(/[^a-zA-Z0-9\s]/g, ''); // Only allow alphanumeric and space
+        const cleanEmail = String(email).trim().toLowerCase();
+
+        // Validate cleaned values
+        if (!cleanTxnid || !cleanAmount || !cleanProductInfo || !cleanFirstname || !cleanEmail) {
+            throw new Error('Invalid input parameters after cleaning');
+        }
+        
+        // PayU hash sequence: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||SALT
+        // Construct hash string exactly as specified in the documentation
+        const hashString = `${key}|${cleanTxnid}|${cleanAmount}|${cleanProductInfo}|${cleanFirstname}|${cleanEmail}|||||||||||${salt}`;
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
     // Debug: log hashString and resulting hash to help diagnose mismatches (remove in production)
     console.debug('PayU hashString:', hashString);
