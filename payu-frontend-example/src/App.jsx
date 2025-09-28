@@ -12,14 +12,14 @@ export default function App() {
   // Product id to use for testing (user input)
   const [productId, setProductId] = useState('68c35a05dd6f33d78209b046')
   // Provided demo JWT to avoid requiring login in the demo UI
-  const PROVIDED_DEMO_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDk3NzgwNTAyOTRhZWZkZThiMDY4ZSIsImlhdCI6MTc1OTA4MjM2OCwiZXhwIjoxNzYxNjc0MzY4fQ.bYbbzUfjxtdU_zhu2hOD20Wm89Uve1Fl0SfhbgiCwQY'
+  const PROVIDED_DEMO_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDk5ZjU0Njg0YTA5NGFhZDExNWNjMyIsImlhdCI6MTc1OTA5MjU2NSwiZXhwIjoxNzYxNjg0NTY1fQ.STjW8EVeKrH1KXenhs-_G-TVs4_milQv4csmsQEkvvs'
 
   const handlePay = async () => {
     setStatus('creating pending order...')
     // 1) Create pending order on backend (replace with actual auth JWT)
     const jwt = localStorage.getItem('token') || ''
     // All API calls should go to backend at port 5000
-    const API_BASE = 'http://localhost:5000'
+    const API_BASE = 'https://backend-wei5.onrender.com'
     // Use protected endpoint (demo user is created on load and token stored in localStorage)
     const endpoint = `${API_BASE}/api/orders/create-pending`
     const createResp = await fetch(endpoint, {
