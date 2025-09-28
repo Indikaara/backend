@@ -151,7 +151,7 @@ exports.initiatePayment = async (req, res) => {
 
         return res.json(paymentData);
     } catch (error) {
-        console.error('Payment initiation error:', error);
+        logger.error('Payment initiation error', { error: error.message, stack: error.stack });
         return res.status(500).json({ error: 'Payment initiation failed' });
     }
 };

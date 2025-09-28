@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Order } = require('../models/order.model');
 const { WebhookEvent } = require('../models/webhookEvent.model');
+const { logger } = require('../config/logger');
 const {
     validatePayuHash,
     validateContentType,
@@ -71,7 +72,7 @@ router.post('/success',
             </html>
         `);
     } catch (error) {
-        console.error('Error processing payment success:', error);
+        logger.error('Error processing payment success', { error: error.message, stack: error.stack });
         res.status(500).send('Error processing payment');
     }
 });
@@ -138,7 +139,7 @@ router.post('/failure',
             </html>
         `);
     } catch (error) {
-        console.error('Error processing payment failure:', error);
+        logger.error('Error processing payment failure', { error: error.message, stack: error.stack });
         res.status(500).send('Error processing payment');
     }
 });

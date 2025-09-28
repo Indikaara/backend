@@ -1,5 +1,6 @@
 const payuConfig = require('../config/payu');
 const crypto = require('crypto');
+const { logger } = require('../config/logger');
 
 class PayUService {
     /**
@@ -72,8 +73,10 @@ class PayUService {
                 email
             });
             // Debug log: print formData and hashString for troubleshooting
-            console.log('PayU formData:', formData);
-            console.log('PayU hashString:', `${formData.key}|${formData.txnid}|${formData.amount}|${formData.productinfo}|${formData.firstname}|${formData.email}|||||||||||${payuConfig.merchantSalt}`);
+            logger.debug('PayU form data generated', { formData });
+            logger.debug('PayU hash string generated', { 
+                hashString: `${formData.key}|${formData.txnid}|${formData.amount}|${formData.productinfo}|${formData.firstname}|${formData.email}|||||||||||${payuConfig.merchantSalt}`
+            });
 
             return {
                 formData,
@@ -81,7 +84,7 @@ class PayUService {
             };
         } catch (err) {
             // Handle error appropriately, e.g., log and rethrow or return error object
-            console.error('Error generating PayU payment form data:', err);
+            logger.error('Error generating PayU payment form data', { error: err.message, stack: err.stack });
             throw err;
         }
     }
@@ -120,8 +123,7 @@ class PayUService {
         const hashString = `${key}|${cleanTxnid}|${cleanAmount}|${cleanProductInfo}|${cleanFirstname}|${cleanEmail}|||||||||||${salt}`;
     const hash = crypto.createHash('sha512').update(hashString).digest('hex');
     // Debug: log hashString and resulting hash to help diagnose mismatches (remove in production)
-    console.debug('PayU hashString:', hashString);
-    console.debug('PayU hash:', hash);
+    logger.debug('PayU hash calculation', { hashString, hash });
     return hash;
     }
 }

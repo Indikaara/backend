@@ -1,4 +1,5 @@
-const User = require('../models/user.model');
+const { User } = require('../models/user.model');
+const { logger } = require('../config/logger');
 
 // @desc    Get current user's profile
 // @route   GET /api/users/me
@@ -24,7 +25,7 @@ exports.getMe = async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
     } catch (err) {
-        console.error('getMe error', err);
+        logger.error('getMe error', { error: err.message, stack: err.stack });
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -82,7 +83,7 @@ exports.updateMe = async (req, res) => {
         await user.save();
         res.json({ _id: user._id, name: user.name, email: user.email });
     } catch (err) {
-        console.error('updateMe error', err);
+        logger.error('updateMe error', { error: err.message, stack: err.stack });
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -95,7 +96,7 @@ exports.getUserById = async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
     } catch (err) {
-        console.error('getUserById error', err);
+        logger.error('getUserById error', { error: err.message, stack: err.stack });
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -107,7 +108,7 @@ exports.listUsers = async (req, res) => {
         const users = await User.find().select('-password -googleId');
         res.json(users);
     } catch (err) {
-        console.error('listUsers error', err);
+        logger.error('listUsers error', { error: err.message, stack: err.stack });
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -121,7 +122,7 @@ exports.deleteUser = async (req, res) => {
         await user.remove();
         res.json({ message: 'User removed' });
     } catch (err) {
-        console.error('deleteUser error', err);
+        logger.error('deleteUser error', { error: err.message, stack: err.stack });
         res.status(500).json({ message: 'Server error' });
     }
 };

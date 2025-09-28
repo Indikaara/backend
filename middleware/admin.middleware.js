@@ -6,7 +6,7 @@ module.exports = (req, res, next) => {
         }
         return next();
     } catch (err) {
-        console.error('admin.middleware error', err);
+        logger.error('admin.middleware error', { error: err.message, stack: err.stack });
         return res.status(500).json({ message: 'Server error' });
     }
 };

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const payuConfig = require('../config/payu');
+const { logger } = require('../config/logger');
 
 /**
  * Validates PayU response hash to ensure request authenticity
@@ -41,10 +42,11 @@ const validatePayuHash = (req, res, next) => {
         const calculatedHash = crypto.createHash('sha512').update(responseString).digest('hex');
 
         if (calculatedHash !== hash) {
-            console.error('PayU hash validation failed');
-            console.debug('Expected hash:', calculatedHash);
-            console.debug('Received hash:', hash);
-            console.debug('Response string:', responseString);
+            logger.error('PayU hash validation failed', {
+                expectedHash: calculatedHash,
+                receivedHash: hash,
+                responseString: responseString
+            });
             return res.status(403).json({
                 error: 'Invalid payment response hash'
             });
@@ -52,7 +54,7 @@ const validatePayuHash = (req, res, next) => {
 
         next();
     } catch (error) {
-        console.error('Error in PayU hash validation:', error);
+        logger.error('Error in PayU hash validation', { error: error.message, stack: error.stack });
         res.status(500).json({
             error: 'Internal server error during payment validation'
         });
@@ -76,7 +78,7 @@ const validateContentType = (req, res, next) => {
  * Log incoming PayU requests for debugging
  */
 const logPayuRequest = (req, res, next) => {
-    console.log('PayU Callback Request:', {
+    logger.http('PayU Callback Request', {
         method: req.method,
         url: req.url,
         headers: req.headers,

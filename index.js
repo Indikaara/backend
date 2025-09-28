@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const { logger } = require('./config/logger');
+const { requestLogger, errorLogger } = require('./middleware/request-logger.middleware');
 const cors = require('cors');
 const passport = require('passport');
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -14,9 +16,24 @@ const swaggerOptions = require('./swagger.config');
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Connect to database
-connectDB();
+connectDB().then(() => {
+    logger.info('Database connected successfully');
+}).catch(err => {
+    logger.error('Database connection failed', { error: err.message, stack: err.stack });
+});
 
 const app = express();
+
+// Request logging middleware
+app.use((req, res, next) => {
+    logger.http(`Incoming ${req.method} request`, {
+        path: req.path,
+        query: req.query,
+        ip: req.ip,
+        userAgent: req.get('user-agent')
+    });
+    next();
+});
 
 // Body parser middleware
 app.use(express.json());
@@ -57,4 +74,8 @@ app.use('/api/users', require('./routes/user.routes'));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Global error handler
+app.use(errorLogger);
+
+// Start server
+app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));

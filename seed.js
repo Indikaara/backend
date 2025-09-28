@@ -1025,10 +1025,10 @@ const seedProducts = async () => {
         });
 
         await Product.insertMany(productsToInsert);
-        console.log('Products seeded successfully');
+        logger.info('Products seeded successfully');
         process.exit();
     } catch (error) {
-        console.error('Seeding failed:', error);
+        logger.error('Seeding failed', { error: error.message, stack: error.stack });
         process.exit(1);
     }
 };

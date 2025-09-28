@@ -7,12 +7,12 @@
   },
   "servers": [
     {
-      "url": "https://backend-wei5.onrender.com",
-      "description": "Deployment server"
-    },
-    {
       "url": "http://localhost:5000",
       "description": "Development server"
+    },
+    {
+      "url": "https://backend-wei5.onrender.com",
+      "description": "Deployment server"
     }
   ],
   "components": {
@@ -139,13 +139,6 @@
           }
         }
       },
-      "CreateOrderProductItem": {
-        "type": "object",
-        "properties": {
-          "product": { "type": "string", "description": "Product ObjectId or SKU" },
-          "quantity": { "type": "number" }
-        }
-      },
       "Order": {
         "type": "object",
         "properties": {
@@ -219,6 +212,18 @@
           }
         }
       },
+      "CreateOrderProductItem": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "description": "Product ObjectId or SKU"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      },
       "CreatePendingRequest": {
         "type": "object",
         "properties": {
@@ -232,7 +237,9 @@
             "type": "object"
           }
         },
-        "required": ["products"]
+        "required": [
+          "products"
+        ]
       },
       "CreatePendingResponse": {
         "type": "object",
@@ -801,52 +808,6 @@
         }
       }
     },
-    "/api/payu/hash": {
-      "post": {
-        "summary": "Compute PayU hash for a transaction (server-side)",
-        "tags": [
-          "PayU"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ComputeHashRequest"
-              },
-              "examples": {
-                "demo": {
-                  "value": {
-                    "txnid": "tx_12345",
-                    "amount": 100,
-                    "productinfo": "Demo",
-                    "firstname": "Demo",
-                    "email": "demo@example.com"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Returns computed hash and merchant key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ComputeHashResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/payu/initiate": {
       "post": {
         "summary": "Initiate PayU Hosted Checkout for an order",
@@ -864,13 +825,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "orderId"
+                ],
                 "properties": {
-                  "orderId": { "type": "string" }
-                },
-                "required": ["orderId"]
-              },
-              "examples": {
-                "sample": { "value": { "orderId": "650f2a3b4c5d6e7f8a9b0c11" } }
+                  "orderId": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }
@@ -883,8 +845,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "formData": { "type": "object" },
-                    "paymentUrl": { "type": "string" }
+                    "formData": {
+                      "type": "object",
+                      "description": "Form fields to submit to PayU (including hash, txnid, key, etc.)"
+                    },
+                    "paymentUrl": {
+                      "type": "string",
+                      "description": "PayU endpoint URL (sandbox or live) where the form should be posted"
+                    }
                   }
                 },
                 "examples": {
@@ -909,78 +877,14 @@
               }
             }
           },
-          "400": { "description": "Bad request (e.g. order not found or referenced product missing)" },
-          "401": { "description": "Unauthorized" },
-          "500": { "description": "Server error" }
-        }
-      }
-    },
-    "/api/payu/webhook": {
-      "post": {
-        "summary": "PayU webhook endpoint (receives payment notifications)",
-        "tags": [
-          "PayU"
-        ],
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "type": "string"
-                  },
-                  "txnid": {
-                    "type": "string"
-                  },
-                  "amount": {
-                    "type": "string"
-                  },
-                  "productinfo": {
-                    "type": "string"
-                  },
-                  "firstname": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string"
-                  },
-                  "status": {
-                    "type": "string"
-                  },
-                  "hash": {
-                    "type": "string"
-                  }
-                }
-              },
-              "examples": {
-                "success-demo": {
-                  "value": {
-                    "key": "your_key",
-                    "txnid": "tx_12345",
-                    "amount": "100",
-                    "productinfo": "Demo",
-                    "firstname": "Demo",
-                    "email": "demo@example.com",
-                    "status": "success",
-                    "hash": "...",
-                    "products": "[{\"product\":\"650f2a3b4c5d6e7f8a9b0c11\",\"quantity\":1}]",
-                    "totalPrice": "100"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
           "400": {
-            "description": "Invalid hash or payment"
+            "description": "Bad request (e.g. order not found or referenced product missing)"
           },
-          "403": {
-            "description": "Forbidden (IP not allowed)"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -1425,6 +1329,76 @@
           },
           "404": {
             "description": "Product not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "summary": "Get current user's profile",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update current user's profile",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user profile"
+          },
+          "400": {
+            "description": "Email already in use"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "500": {
             "description": "Server error"
