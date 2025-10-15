@@ -1,4 +1,4 @@
-const { Product } = require('../models/product.model');
+const Product = require('../models/product.model').Product;
 const { logger } = require('../config/logger');
 const { AppError } = require('../utils/error-utils');
 

@@ -1,4 +1,5 @@
 const Order = require('../models/order.model');
+const { Product } = require('../models/product.model');
 
 // @desc    Create a new order
 // @route   POST /api/orders
@@ -35,7 +36,6 @@ exports.createOrder = async (req, res) => {
         }
 
         // Fetch all products to validate prices
-        const Product = require('../models/product.model');
         const productIds = products.map(p => p.product);
         const dbProducts = await Product.find({ _id: { $in: productIds } });
         
@@ -162,7 +162,6 @@ exports.createPendingOrder = async (req, res) => {
         }
 
         // Validate products and compute prices from DB (do not trust client-supplied prices)
-        const Product = require('../models/product.model');
         const productIds = products.map(p => p.product);
         const dbProducts = await Product.find({ _id: { $in: productIds } });
         if (dbProducts.length !== products.length) {

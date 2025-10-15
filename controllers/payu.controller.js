@@ -1,7 +1,8 @@
 const Order = require('../models/order.model');
 const WebhookEvent = require('../models/webhookEvent.model');
 const PayUService = require('../services/payu.service');
-const Product = require('../models/product.model');
+const { Product } = require('../models/product.model');
+const { logger } = require('../config/logger');
 const crypto = require('crypto');
 
 /**
