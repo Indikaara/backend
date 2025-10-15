@@ -43,10 +43,22 @@ app.use(express.urlencoded({ extended: false }));
 
 // CORS middleware with specific options
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Vite's default development port
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    origin: [
+        'http://localhost:5173',     // Vite's default development port
+        'http://127.0.0.1:5173',     // Alternative local development URL
+        'https://backend-wei5.onrender.com',  // Production backend
+        'https://www.indikaara.com'          // Production frontend
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Origin',
+        'X-Requested-With',
+        'Accept'
+    ],
+    credentials: true,
+    maxAge: 86400 // CORS preflight cache for 24 hours
 }));
 
 // Passport middleware
