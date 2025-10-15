@@ -1,12 +1,13 @@
-const User = require('../models/user.model');
+const { User } = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const { logger } = require('../config/logger');
 
 // Helper function to generate token
-const generateToken = (id) => {
-    console.log(`[AUTH] Generating JWT token for user ID: ${id}`);
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
+const generateToken = (userId) => {
+    logger.debug('Generating JWT token', { userId });
+    return jwt.sign({ userId }, process.env.JWT_SECRET, {
+        expiresIn: '7d',
     });
 };
 

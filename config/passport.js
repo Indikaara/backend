@@ -1,28 +1,47 @@
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/user.model');
-
-const opts = {};
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = process.env.JWT_SECRET;
+const { User } = require('../models/user.model');
+const { logger } = require('./logger');
 
 module.exports = (passport) => {
-    // JWT Strategy
-    passport.use(
-        new JwtStrategy(opts, async (jwt_payload, done) => {
-            try {
-                const user = await User.findById(jwt_payload.id);
-                if (user) {
-                    return done(null, user);
-                }
+    // JWT Strategy Configuration
+    passport.use(new JwtStrategy({
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        secretOrKey: process.env.JWT_SECRET,
+        jsonWebTokenOptions: {
+            maxAge: '7d' // Token expiry
+        }
+    }, async (jwt_payload, done) => {
+        try {
+            if (!jwt_payload || !jwt_payload.userId) {
+                logger.warn('Invalid JWT payload', { payload: jwt_payload });
                 return done(null, false);
-            } catch (err) {
-                console.error(err);
-                return done(err, false);
             }
-        })
-    );
+
+            const user = await User.findById(jwt_payload.userId);
+            
+            if (user) {
+                logger.debug('JWT authentication successful', { 
+                    userId: user._id,
+                    email: user.email 
+                });
+                return done(null, user);
+            }
+
+            logger.warn('User not found for JWT', { 
+                userId: jwt_payload.userId 
+            });
+            return done(null, false);
+        } catch (err) {
+            logger.error('JWT authentication error', {
+                error: err.message,
+                stack: err.stack,
+                payload: jwt_payload
+            });
+            return done(err, false);
+        }
+    }));
 
     // Google OAuth Strategy
     passport.use(new GoogleStrategy({
