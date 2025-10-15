@@ -86,8 +86,14 @@ app.use('/api/users', require('./routes/user.routes'));
 
 const PORT = process.env.PORT || 5000;
 
-// Global error handler
+// Global error handlers
 app.use(errorLogger);
+app.use(require('./middleware/error.middleware'));
+
+// Catch 404 and forward to error handler (must be after other routes)
+app.use((req, res, next) => {
+    next(new AppError(`Route ${req.originalUrl} not found`, 404));
+});
 
 // Start server
 app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));

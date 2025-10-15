@@ -12,7 +12,7 @@ export default function App() {
   // Product id to use for testing (user input)
   const [productId, setProductId] = useState('68c35a05dd6f33d78209b046')
   // Provided demo JWT to avoid requiring login in the demo UI
-  const PROVIDED_DEMO_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDk5ZjU0Njg0YTA5NGFhZDExNWNjMyIsImlhdCI6MTc1OTA5MjU2NSwiZXhwIjoxNzYxNjg0NTY1fQ.STjW8EVeKrH1KXenhs-_G-TVs4_milQv4csmsQEkvvs'
+  const PROVIDED_DEMO_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGVmOTRhMzgxOWUzZTM1ZTU3Njk2Y2IiLCJpYXQiOjE3NjA1MzI5MzgsImV4cCI6MTc2MTEzNzczOH0.YNt1L5sR_-sG363lYoH0BGSBAUoR8uzYOwxa2FvlsdI'
 
   const handlePay = async () => {
     setStatus('creating pending order...')
@@ -116,7 +116,7 @@ export default function App() {
         // Instead of hitting demo-login, use the provided token so demo doesn't ask for login
         try {
           localStorage.setItem('token', PROVIDED_DEMO_TOKEN);
-          return { token: PROVIDED_DEMO_TOKEN, email: 'demo@example.com' };
+          return { token: PROVIDED_DEMO_TOKEN, email: 'alice@example.com' };
         } catch (err) {
           return null;
         }

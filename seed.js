@@ -1,9 +1,21 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const Product = require('./models/product.model');
+const { Product } = require('./models/product.model');
 const connectDB = require('./config/db');
+const { logger } = require('./config/logger');
 
-dotenv.config();
+// Ensure mongoose is connected before proceeding
+mongoose.connection.on('error', (err) => {
+    logger.error('MongoDB connection error', { error: err.message, stack: err.stack });
+    process.exit(1);
+});
+
+mongoose.connection.once('open', () => {
+    logger.info('MongoDB connected successfully for seeding');
+});
+
+// Set environment for seeding
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 connectDB();
 
@@ -1010,7 +1022,14 @@ const productsData = [
 
 const seedProducts = async () => {
     try {
-        await Product.deleteMany(); // Clear existing products
+        // Wait for database connection
+        await connectDB();
+        
+        logger.info('Starting product seeding...');
+        
+        // Clear existing products
+        await Product.deleteMany({});
+        logger.info('Cleared existing products');
 
         const productsToInsert = [];
 
@@ -1024,13 +1043,18 @@ const seedProducts = async () => {
             });
         });
 
+        logger.info(`Inserting ${productsToInsert.length} products...`);
         await Product.insertMany(productsToInsert);
+        
         logger.info('Products seeded successfully');
-        process.exit();
+        await mongoose.connection.close();
+        process.exit(0);
     } catch (error) {
         logger.error('Seeding failed', { error: error.message, stack: error.stack });
+        await mongoose.connection.close();
         process.exit(1);
     }
 };
 
+// Execute seeding
 seedProducts();

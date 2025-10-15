@@ -4,20 +4,19 @@ const {
     getAllProducts,
     getProductById,
     createProduct,
-    initiatePayUPayment,
+    updateProduct,
+    deleteProduct
 } = require('../controllers/product.controller');
-// PayU payment initiation route
-router.post('/payu-payment', initiatePayUPayment);
 const { protect } = require('../middleware/auth.middleware');
 
 // Public routes
 router.get('/', getAllProducts);
 router.get('/:id', getProductById);
 
-// Protected route (only logged-in users can create products)
+// Protected routes (only logged-in users can modify products)
 router.post('/', protect, createProduct);
-
-// You can add more protected routes for updating and deleting here
+router.put('/:id', protect, updateProduct);
+router.delete('/:id', protect, deleteProduct);
 // router.put('/:id', protect, updateProduct);
 // router.delete('/:id', protect, deleteProduct);
 
