@@ -1,26 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth.middleware');
 const {
     createOrder,
-    getOrderById,
-    getMyOrders,
     createPendingOrder,
     createOrderAfterPayU,
+    getOrderById,
+    getMyOrders
 } = require('../controllers/order.controller');
-// Create order after PayU payment success
-router.post('/payu-success', protect, createOrderAfterPayU);
+const { protect } = require('../middleware/auth.middleware'); // Assuming auth middleware exists
 
-// Create a pending order and return txnid (protected)
-// Create a pending order and return txnid (protected)
-router.post('/create-pending', protect, createPendingOrder);
-// (Removed public create-pending-public endpoint; pending orders require authentication now)
+router.route('/').post(protect, createOrder);
+router.route('/create-pending').post(protect, createPendingOrder);
+router.route('/payu-success').post(protect, createOrderAfterPayU);
 
-// Create order
-router.post('/', protect, createOrder);
-// Get order by ID
-router.get('/:id', protect, getOrderById);
-// Get all orders for logged-in user
-router.get('/my/orders', protect, getMyOrders);
+// **IMPORTANT**: The specific '/my' route must be before the parameterized '/:id' route.
+router.route('/my').get(protect, getMyOrders);
+router.route('/:id').get(protect, getOrderById);
+
 
 module.exports = router;
