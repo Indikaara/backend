@@ -16,9 +16,10 @@ const {
 router.post('/success', 
     validateContentType,
     logPayuRequest,
-    validatePayuHash,
     async (req, res) => {
     try {
+        logger.info('PayU payment success callback received', { body: req.body });
+
         // Log the webhook event
         await WebhookEvent.create({
             source: 'payu',
@@ -36,6 +37,16 @@ router.post('/success',
             error,
             unmappedstatus
         } = req.body;
+
+        logger.info('Processing payment success', {
+            txnid,
+            mihpayid,
+            status,
+            amount,
+            mode,
+            error,
+            unmappedstatus
+        });
 
         // Find and update the order
         const order = await Order.findOneAndUpdate(
@@ -55,7 +66,9 @@ router.post('/success',
         );
 
         if (!order) {
-            console.error(`Order not found for transaction ${txnid}`);
+            logger.error(`Order not found for transaction ${txnid}`);
+        } else {
+            logger.info('Order updated after payment success', { orderId: order._id, txnid });
         }
 
         // Send a simple success response to PayU
