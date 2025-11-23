@@ -120,7 +120,7 @@ exports.initiatePayment = async (req, res) => {
         await order.save();
 
     // Prefer frontend base URL for PayU return pages; fall back to backend host
-    const baseUrl = process.env.FRONTEND_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const baseUrl = process.env.SERVER_URL || `${req.protocol}://${req.get('host')}`;
 
         // Format amount to exactly 2 decimal places
         const formattedAmount = parseFloat(amount).toFixed(2);

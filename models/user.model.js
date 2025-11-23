@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
         unique: true,
         match: [/.+\@.+\..+/, 'Please fill a valid email address'],
     },
+    phone: {
+        type: String,
+        required: false,
+        match: [/^\d{10}$/, 'Please fill a valid phone number'],
+    },
     password: {
         type: String,
         // Password is not required if logging in with Google
@@ -30,6 +35,14 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    shippingAddresses: [{
+        address: String,
+        city: String,
+        state: String,
+        postalCode: String,
+        country: String,
+        isDefault: { type: Boolean, default: false }
+    }]
 }, {
     timestamps: true,
 });
