@@ -56,7 +56,8 @@ exports.payuReturnHandler = async (req, res) => {
 
         if (frontendBase) {
             // Redirect to a frontend route — include txnid and status so frontend can reconcile with backend/webhook
-            const redirectUrl = `${frontendBase}/payment-result?txnid=${encodeURIComponent(txnid || '')}&status=${encodeURIComponent(status || '')}`;
+            const redirectUrl = `${frontendBase}/dashboard`
+            // /payment-result?txnid=${encodeURIComponent(txnid || '')}&status=${encodeURIComponent(status || '')}`;
             return res.redirect(302, redirectUrl);
         }
 
