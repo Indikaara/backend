@@ -8,6 +8,7 @@ const passport = require('passport');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const connectDB = require('./config/db');
+const AppError = require('./utils/appError');
 
 // Load env vars
 dotenv.config();
