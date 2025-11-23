@@ -5,6 +5,30 @@ const { Product } = require('../models/product.model');
 const { logger } = require('../config/logger');
 const crypto = require('crypto');
 
+// Handler for PayU redirect (surl / furl)
+// After validation (middleware) we redirect the user to the frontend with txnid and status
+exports.payuReturnHandler = async (req, res) => {
+    try {
+        const data = req.body || {};
+        const { txnid, status } = data;
+
+        // Prefer frontend URL if configured
+        const frontendBase = (process.env.FRONTEND_BASE_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
+
+        if (frontendBase) {
+            // Redirect to a frontend route — include txnid and status so frontend can reconcile with backend/webhook
+            const redirectUrl = `${frontendBase}/payment-result?txnid=${encodeURIComponent(txnid || '')}&status=${encodeURIComponent(status || '')}`;
+            return res.redirect(302, redirectUrl);
+        }
+
+        // If frontend not configured, return a small HTML response indicating status
+        return res.status(200).send(`<html><body><h1>Payment ${status}</h1><p>Transaction: ${txnid || 'unknown'}</p></body></html>`);
+    } catch (error) {
+        logger.error('Error handling PayU redirect', { error: error.message, stack: error.stack });
+        return res.status(500).send('Server error');
+    }
+};
+
 /**
  * @swagger
  * /api/payu/initiate:
