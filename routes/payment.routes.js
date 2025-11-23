@@ -48,18 +48,15 @@ router.post('/success',
             unmappedstatus
         });
 
-        // Find and update the order
+        // Find and update the order by txnid
         const order = await Order.findOneAndUpdate(
-            { transactionId: txnid },
+            { txnid: txnid },
             {
                 $set: {
-                    paymentStatus: status,
-                    paymentId: mihpayid,
-                    paymentMode: mode,
-                    paymentError: error,
-                    paymentRawStatus: unmappedstatus,
-                    paidAmount: amount,
-                    lastPaymentUpdate: new Date()
+                    isPaid: true,
+                    paidAt: new Date(),
+                    paymentResult: { id: mihpayid || txnid, status },
+                    status: 'confirmed'
                 }
             },
             { new: true }

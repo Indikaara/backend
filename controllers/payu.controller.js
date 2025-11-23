@@ -15,6 +15,45 @@ exports.payuReturnHandler = async (req, res) => {
         // Prefer frontend URL if configured
         const frontendBase = (process.env.FRONTEND_BASE_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
 
+        // Persist a WebhookEvent for audit (browser redirect payload)
+        try {
+            await WebhookEvent.create({
+                provider: 'payu',
+                payload: data,
+                headers: req.headers,
+                ip: req.ip,
+                rawBody: req.rawBody || null,
+                hashValid: true,
+                status: status || 'unknown',
+                event: 'return_redirect'
+            });
+        } catch (e) {
+            logger.warn('Failed to persist PayU return event', { err: e.message });
+        }
+
+        // Try to update the order server-side as a fallback in case webhook was not delivered yet
+        try {
+            if (txnid) {
+                const existingOrder = await Order.findOne({ txnid });
+                if (existingOrder) {
+                    if (!existingOrder.isPaid) {
+                        existingOrder.isPaid = status === 'success';
+                        if (status === 'success') {
+                            existingOrder.paidAt = new Date();
+                            existingOrder.paymentResult = { id: data.mihpayid || txnid, status };
+                            existingOrder.status = 'confirmed';
+                        }
+                        await existingOrder.save();
+                        logger.info('Order updated from PayU return', { orderId: existingOrder._id, txnid, status });
+                    }
+                } else {
+                    logger.warn('No order found for txnid on PayU return', { txnid });
+                }
+            }
+        } catch (e) {
+            logger.error('Error updating order from PayU return', { error: e.message });
+        }
+
         if (frontendBase) {
             // Redirect to a frontend route — include txnid and status so frontend can reconcile with backend/webhook
             const redirectUrl = `${frontendBase}/payment-result?txnid=${encodeURIComponent(txnid || '')}&status=${encodeURIComponent(status || '')}`;
@@ -318,8 +357,15 @@ exports.payuWebhook = async (req, res) => {
                 existingOrder.isPaid = true;
                 existingOrder.paidAt = new Date();
                 existingOrder.paymentResult = { id: txnid, status };
-                existingOrder.status = 'processing';
+                // Set to 'confirmed' when payment is verified by PayU
+                existingOrder.status = 'confirmed';
                 await existingOrder.save();
+            } else {
+                // Ensure status is at least 'confirmed' for already-paid orders
+                if (existingOrder.status !== 'confirmed') {
+                    existingOrder.status = 'confirmed';
+                    await existingOrder.save();
+                }
             }
             return res.status(200).send('OK');
         }
@@ -380,7 +426,9 @@ exports.payuWebhook = async (req, res) => {
             totalPrice: computedTotal,
             isPaid: true,
             paidAt: new Date(),
-            paymentResult: { id: txnid, status }
+            paymentResult: { id: txnid, status },
+            // New orders created from webhook are considered confirmed since payment is verified
+            status: 'confirmed'
         });
 
         await order.save();
