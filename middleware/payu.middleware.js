@@ -32,13 +32,18 @@ const validatePayuHash = (req, res, next) => {
             });
         }
 
-        // For success transactions:
-        // sha512(SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
-        
-        // For failure transactions:
-        // sha512(SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
+    // Build reverse hash string per PayU docs (salt|status|<11 empty fields>|email|firstname|productinfo|amount|txnid|key)
+    // Note: PayU uses a specific number of empty pipe-delimited fields between status and email.
+    // The controller uses 11 empty fields — keep middleware consistent to avoid hash mismatches.
 
-        const responseString = `${payuConfig.merchantSalt}|${status}||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+    const normalizedEmail = (email || '').toString().toLowerCase().trim();
+    const normalizedFirst = (firstname || '').toString().trim();
+    const normalizedProduct = (productinfo || '').toString();
+    const normalizedAmount = (amount || '').toString();
+    const normalizedTxn = (txnid || '').toString();
+    const normalizedKey = (key || '').toString();
+
+    const responseString = `${payuConfig.merchantSalt}|${status}|||||||||||${normalizedEmail}|${normalizedFirst}|${normalizedProduct}|${normalizedAmount}|${normalizedTxn}|${normalizedKey}`;
         const calculatedHash = crypto.createHash('sha512').update(responseString).digest('hex');
 
         if (calculatedHash !== hash) {
