@@ -13,56 +13,6 @@ const generateToken = (userId) => {
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
-/**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *           examples:
- *             demo:
- *               value:
- *                 name: 'Alice'
- *                 email: 'alice@example.com'
- *                 password: 'password123'
- *     responses:
- *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 email:
- *                   type: string
- *                 token:
- *                   type: string
- *       400:
- *         description: User already exists or invalid data
- *       500:
- *         description: Server error
- */
 exports.registerUser = async (req, res) => {
     const { name, email, password } = req.body;
     console.log(`[AUTH] Register attempt for email: ${email} from IP: ${req.ip}`);
@@ -95,47 +45,6 @@ exports.registerUser = async (req, res) => {
 
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: Login user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 _id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 email:
- *                   type: string
- *                 token:
- *                   type: string
- *       401:
- *         description: Invalid email or password
- *       500:
- *         description: Server error
- */
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
     console.log(`[AUTH] Login attempt for email: ${email} from IP: ${req.ip}`);
@@ -216,27 +125,6 @@ exports.googleTokenAuth = async (req, res) => {
 
 // @desc Demo login - find or create a demo user and return a token
 // @route POST /api/auth/demo-login
-/**
- * @swagger
- * /api/auth/demo-login:
- *   post:
- *     summary: Create or fetch a demo user and return a JWT (dev only)
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Demo user created/fetched
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
- *             examples:
- *               demo:
- *                 value:
- *                   _id: 'user_123'
- *                   name: 'Demo User'
- *                   email: 'demo@example.com'
- *                   token: 'jwt_token_here'
- */
 exports.demoLogin = async (req, res) => {
     // Only allow demo login in non-production or when explicitly enabled
     if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_LOGIN !== 'true') {
@@ -271,27 +159,6 @@ exports.demoLogin = async (req, res) => {
 
 // @desc Seed an admin user (dev-only or when ENABLE_SEED_ADMIN=true)
 // @route POST /api/auth/seed-admin
-/**
- * @swagger
- * /api/auth/seed-admin:
- *   post:
- *     summary: Seed an admin user (dev only) and return JWT
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Admin user created/ensured
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
- *             examples:
- *               admin:
- *                 value:
- *                   _id: 'admin_123'
- *                   name: 'Admin User'
- *                   email: 'admin@example.com'
- *                   token: 'jwt_admin_token_here'
- */
 exports.seedAdmin = async (req, res) => {
     if (process.env.NODE_ENV === 'production' && process.env.ENABLE_SEED_ADMIN !== 'true') {
         return res.status(403).json({ message: 'Seeding admin disabled in production' });

@@ -2,61 +2,6 @@ const WebhookEvent = require('../models/webhookEvent.model');
 
 // GET /api/admin/webhooks
 // Query params: page, limit, provider, hashValid (true/false)
-/**
- * @swagger
- * /api/admin/webhooks:
- *   get:
- *     summary: List webhook events (admin only)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *       - in: query
- *         name: provider
- *         schema:
- *           type: string
- *       - in: query
- *         name: hashValid
- *         schema:
- *           type: boolean
- *     responses:
- *       200:
- *         description: Paginated webhook events
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 page:
- *                   type: integer
- *                 limit:
- *                   type: integer
- *                 total:
- *                   type: integer
- *                 events:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/WebhookEvent'
- *             examples:
- *               sample:
- *                 value:
- *                   page: 1
- *                   limit: 20
- *                   total: 1
- *                   events:
- *                     - _id: 'evt_123'
- *                       provider: 'payu'
- *                       status: 'success'
- *                       hashValid: true
- */
 exports.getWebhookEvents = async (req, res) => {
     try {
         const page = Math.max(1, parseInt(req.query.page || '1'));

@@ -69,61 +69,6 @@ exports.payuReturnHandler = async (req, res) => {
     }
 };
 
-/**
- * @swagger
- * /api/payu/initiate:
- *   post:
- *     summary: Initiate PayU Hosted Checkout for an order
- *     tags: [PayU]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - orderId
- *             properties:
- *               orderId:
- *                 type: string
- *     responses:
- *       200:
- *         description: Returns PayU hosted checkout form data and payment URL
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 formData:
- *                   type: object
- *                   description: Form fields to submit to PayU (including hash, txnid, key, etc.)
- *                 paymentUrl:
- *                   type: string
- *                   description: PayU endpoint URL (sandbox or live) where the form should be posted
- *             examples:
- *               sample:
- *                 value:
- *                   formData:
- *                     key: "your_merchant_key"
- *                     txnid: "tx_1700000000000_1234"
- *                     amount: "1999.00"
- *                     productinfo: "Order #650f2a3b..."
- *                     firstname: "Demo"
- *                     email: "demo@example.com"
- *                     surl: "https://yourdomain.com/pay-success"
- *                     furl: "https://yourdomain.com/pay-fail"
- *                     service_provider: "payu_paisa"
- *                     hash: "<sha512-hash-goes-here>"
- *                   paymentUrl: "https://test.payu.in/_payment"
- *       400:
- *         description: Bad request (e.g. order not found or referenced product missing)
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
 exports.initiatePayment = async (req, res) => {
     try {
         const { orderId, txnid: reqTxnId } = req.body;
@@ -230,58 +175,6 @@ exports.initiatePayment = async (req, res) => {
 // - Headers and IP are stored
 // - Clear failure reasons and idempotent order updates by txnid
 exports.payuWebhook = async (req, res) => {
-    /**
-    /**
-    * /api/payu/webhook:
-    *   post:
-    *     summary: PayU webhook endpoint (receives payment notifications)
-    *     tags: [PayU]
-    *     requestBody:
-    *       content:
-    *         application/x-www-form-urlencoded:
-    *           schema:
-    *             type: object
-    *             properties:
-    *               key:
-    *                 type: string
-    *               txnid:
-    *                 type: string
-    *               amount:
-    *                 type: string
-    *               productinfo:
-    *                 type: string
-    *               firstname:
-    *                 type: string
-    *               email:
-    *                 type: string
-    *               status:
-    *                 type: string
-    *               hash:
-    *                 type: string
-    *               products:
-    *                 type: string
-    *                 description: Optional JSON stringified products array included by some integrations
-    *           examples:
-    *             success-demo:
-    *               value:
-    *                 key: 'your_key'
-    *                 txnid: 'tx_12345'
-    *                 amount: '100'
-    *                 productinfo: 'Demo'
-    *                 firstname: 'Demo'
-    *                 email: 'demo@example.com'
-    *                 status: 'success'
-    *                 hash: '...'
-    *                 products: '[{"product":"650f2a3b4c5d6e7f8a9b0c11","quantity":1}]'
-    *                 totalPrice: '100'
-    *     responses:
-    *       200:
-    *         description: OK (webhook accepted). Note: if webhook references unknown products the event is persisted for manual review and the endpoint still returns 200 to avoid retries.
-    *       400:
-    *         description: Invalid hash or payment (payload rejected)
-    *       403:
-    *         description: Forbidden (IP not allowed)
-     */
     try {
         const merchantSalt = process.env.PAYU_MERCHANT_SALT;
         const merchantKey = process.env.PAYU_MERCHANT_KEY;

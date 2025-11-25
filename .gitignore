@@ -2,5 +2,3 @@ node_modules/
 .env
 
 # PayU frontend example - ignore node_modules and build output but keep source files
-payu-frontend-example/node_modules/
-payu-frontend-example/dist/

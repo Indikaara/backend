@@ -565,6 +565,125 @@ paths:
           description: Unauthorized
         '500':
           description: Server error
+  /api/payu/webhook:
+    post:
+      summary: PayU webhook endpoint (receives payment notifications)
+      tags:
+        - PayU
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                txnid:
+                  type: string
+                amount:
+                  type: string
+                productinfo:
+                  type: string
+                firstname:
+                  type: string
+                email:
+                  type: string
+                status:
+                  type: string
+                hash:
+                  type: string
+                products:
+                  type: string
+                  description: Optional JSON stringified products array included by some integrations
+            examples:
+              success-demo:
+                value:
+                  key: your_key
+                  txnid: tx_12345
+                  amount: '100'
+                  productinfo: Demo
+                  firstname: Demo
+                  email: demo@example.com
+                  status: success
+                  hash: '...'
+                  products: '[{"product":"650f2a3b4c5d6e7f8a9b0c11","quantity":1}]'
+                  totalPrice: '100'
+      responses:
+        '200':
+          description: OK (webhook accepted). Note - if webhook references unknown products the event is persisted for manual review and the endpoint still returns 200 to avoid retries.
+        '400':
+          description: Invalid hash or payment (payload rejected)
+        '403':
+          description: Forbidden (IP not allowed)
+  /api/payu/success:
+    post:
+      summary: PayU success redirect handler (browser redirect from PayU)
+      tags:
+        - PayU
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                txnid:
+                  type: string
+                amount:
+                  type: string
+                productinfo:
+                  type: string
+                firstname:
+                  type: string
+                email:
+                  type: string
+                status:
+                  type: string
+                hash:
+                  type: string
+                mihpayid:
+                  type: string
+      responses:
+        '302':
+          description: Redirects to frontend with transaction details
+        '200':
+          description: HTML response if frontend URL not configured
+  /api/payu/failure:
+    post:
+      summary: PayU failure redirect handler (browser redirect from PayU)
+      tags:
+        - PayU
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                txnid:
+                  type: string
+                amount:
+                  type: string
+                productinfo:
+                  type: string
+                firstname:
+                  type: string
+                email:
+                  type: string
+                status:
+                  type: string
+                hash:
+                  type: string
+      responses:
+        '302':
+          description: Redirects to frontend with transaction details
+        '200':
+          description: HTML response if frontend URL not configured
   /api/products:
     get:
       summary: Get all products

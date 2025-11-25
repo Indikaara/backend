@@ -3,22 +3,6 @@ const { logger } = require('../config/logger');
 
 // @desc    Get current user's profile
 // @route   GET /api/users/me
-/**
- * @swagger
- * /api/users/me:
- *   get:
- *     summary: Get current user's profile
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password -googleId');
@@ -32,37 +16,6 @@ exports.getMe = async (req, res) => {
 
 // @desc    Update current user's profile
 // @route   PUT /api/users/me
-/**
- * @swagger
- * /api/users/me:
- *   put:
- *     summary: Update current user's profile
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Updated user profile
- *       400:
- *         description: Email already in use
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
 exports.updateMe = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);

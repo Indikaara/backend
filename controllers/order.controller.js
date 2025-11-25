@@ -3,30 +3,6 @@ const { Product } = require('../models/product.model');
 
 // @desc    Create a new order
 // @route   POST /api/orders
-/**
- * @swagger
- * /api/orders:
- *   post:
- *     summary: Create a new order
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Order'
- *     responses:
- *       201:
- *         description: Created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Order'
- *       400:
- *         description: Bad request
- */
 exports.createOrder = async (req, res) => {
     try {
         const { products, shippingAddress, paymentMethod } = req.body;
@@ -127,33 +103,6 @@ exports.createOrder = async (req, res) => {
 
 // @desc    Create a pending order and generate txnid
 // @route   POST /api/orders/create-pending
-/**
- * @swagger
- * /api/orders/create-pending:
- *   post:
- *     summary: Create a pending order and get a txnid (used for PayU)
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreatePendingRequest'
- *     responses:
- *       201:
- *         description: Pending order created with txnid
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CreatePendingResponse'
- *             examples:
- *               demo:
- *                 value:
- *                   order: { txnid: 'tx_12345', totalPrice: 100 }
- *                   txnid: 'tx_12345'
- */
 exports.createPendingOrder = async (req, res) => {
     try {
         const { products, shippingAddress } = req.body;
@@ -203,22 +152,6 @@ exports.createPendingOrder = async (req, res) => {
 
 // @desc    Create order after PayU payment success (callback/redirect)
 // @route   POST /api/orders/payu-success
-/**
- * @swagger
- * /api/orders/payu-success:
- *   post:
- *     summary: Create an order after PayU redirects/callbacks (post-payment)
- *     tags: [Orders]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Order'
- *     responses:
- *       201:
- *         description: Order created
- */
 exports.createOrderAfterPayU = async (req, res) => {
     try {
         // PayU will send txnid, status, hash, and other details
@@ -246,26 +179,6 @@ exports.createOrderAfterPayU = async (req, res) => {
 
 // @desc    Get order by ID
 // @route   GET /api/orders/:id
-/**
- * @swagger
- * /api/orders/{id}:
- *   get:
- *     summary: Get order by ID
- *     tags: [Orders]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Order
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Order'
- */
 exports.getOrderById = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id).populate('user', 'name email').populate('products.product', 'name price');
@@ -278,24 +191,6 @@ exports.getOrderById = async (req, res) => {
 
 // @desc    Get all orders for logged-in user
 // @route   GET /api/orders/my
-/**
- * @swagger
- * /api/orders/my:
- *   get:
- *     summary: Get orders for the logged-in user
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of orders
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Order'
- */
 exports.getMyOrders = async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id }).populate('products.product', 'name price');

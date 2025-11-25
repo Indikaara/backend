@@ -2,38 +2,6 @@ const mongoose = require('mongoose');
 
 // @desc    Health check for app, DB, and OAuth
 // @route   GET /api/health
-/**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Health check
- *     tags: [Health]
- *     responses:
- *       200:
- *         description: Health status
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 timestamp:
- *                   type: string
- *                 uptime:
- *                   type: number
- *                 services:
- *                   type: object
- *                   properties:
- *                     app:
- *                       type: string
- *                     database:
- *                       type: string
- *                     oauth:
- *                       type: string
- *       500:
- *         description: Health check failed
- */
 exports.healthCheck = async (req, res) => {
     const health = {
         status: 'OK',
