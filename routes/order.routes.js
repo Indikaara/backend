@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createOrder,
     createPendingOrder,
     createOrderAfterPayU,
     getOrderById,
@@ -9,7 +8,6 @@ const {
 } = require('../controllers/order.controller');
 const { protect } = require('../middleware/auth.middleware'); // Assuming auth middleware exists
 
-router.route('/').post(protect, createOrder);
 router.route('/create-pending').post(protect, createPendingOrder);
 router.route('/payu-success').post(protect, createOrderAfterPayU);
 
