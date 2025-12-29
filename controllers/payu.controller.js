@@ -1,9 +1,103 @@
 const Order = require('../models/order.model');
 const WebhookEvent = require('../models/webhookEvent.model');
 const PayUService = require('../services/payu.service');
+const EmailService = require('../services/email.service');
 const { Product } = require('../models/product.model');
 const { logger } = require('../config/logger');
 const crypto = require('crypto');
+
+// ============== Helper Methods ==============
+
+/**
+ * Persist webhook event for audit trail
+ * @private
+ */
+async function persistWebhookEvent(provider, data, headers, ip, rawBody, hashValid, status, event = 'webhook') {
+    try {
+        return await WebhookEvent.create({
+            provider,
+            payload: data,
+            headers,
+            ip,
+            rawBody: rawBody || null,
+            hashValid,
+            status: status || 'unknown',
+            event
+        });
+    } catch (error) {
+        logger.warn(`Failed to persist ${provider} ${event} event`, { err: error.message });
+        return null;
+    }
+}
+
+/**
+ * Update order payment status and details
+ * @private
+ */
+async function updateOrderPaymentStatus(order, paymentData) {
+    order.isPaid = true;
+    order.paidAt = new Date();
+    order.paymentResult = {
+        id: paymentData.txnid || paymentData.id,
+        status: paymentData.status,
+        email_address: paymentData.email,
+        firstname: paymentData.firstname
+    };
+    order.status = 'confirmed';
+    await order.save();
+    return order;
+}
+
+/**
+ * Populate order with user and product details for email
+ * @private
+ */
+async function populateOrderForEmail(orderId) {
+    try {
+        return await Order.findById(orderId)
+            .populate('user', 'name email')
+            .populate('products.product', 'name price');
+    } catch (error) {
+        logger.error('Failed to populate order for email', { orderId, error: error.message });
+        return null;
+    }
+}
+
+/**
+ * Trigger order confirmation email (non-blocking)
+ * @private
+ */
+function triggerOrderConfirmationEmail(orderId, context = 'unknown') {
+    populateOrderForEmail(orderId)
+        .then(populatedOrder => {
+            if (populatedOrder) {
+                return EmailService.sendOrderConfirmationEmail(populatedOrder);
+            }
+        })
+        .catch(err => {
+            logger.error(`Email sending failed in ${context}`, {
+                orderId,
+                error: err.message
+            });
+        });
+}
+
+/**
+ * Handle order update and email notification for successful payment
+ * @private
+ */
+async function handleSuccessfulPayment(order, paymentData) {
+    await updateOrderPaymentStatus(order, paymentData);
+    
+    // Trigger email notification (fire and forget)
+    if (!order.emailSent) {
+        triggerOrderConfirmationEmail(order._id, paymentData.context || 'payment');
+    }
+    
+    return order;
+}
+
+// ============== Request Handlers ==============
 
 // Handler for PayU redirect (surl / furl)
 // After validation (middleware) we redirect the user to the frontend with txnid and status
@@ -16,37 +110,23 @@ exports.payuReturnHandler = async (req, res) => {
         const frontendBase = (process.env.FRONTEND_BASE_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
 
         // Persist a WebhookEvent for audit (browser redirect payload)
-        try {
-            await WebhookEvent.create({
-                provider: 'payu',
-                payload: data,
-                headers: req.headers,
-                ip: req.ip,
-                rawBody: req.rawBody || null,
-                hashValid: true,
-                status: status || 'unknown',
-                event: 'return_redirect'
-            });
-        } catch (e) {
-            logger.warn('Failed to persist PayU return event', { err: e.message });
-        }
+        await persistWebhookEvent('payu', data, req.headers, req.ip, req.rawBody, true, status, 'return_redirect');
 
         // Try to update the order server-side as a fallback in case webhook was not delivered yet
         try {
             if (txnid) {
                 const existingOrder = await Order.findOne({ txnid });
-                if (existingOrder) {
-                    if (!existingOrder.isPaid) {
-                        existingOrder.isPaid = status === 'success';
-                        if (status === 'success') {
-                            existingOrder.paidAt = new Date();
-                            existingOrder.paymentResult = { id: data.mihpayid || txnid, status };
-                            existingOrder.status = 'confirmed';
-                        }
-                        await existingOrder.save();
-                        logger.info('Order updated from PayU return', { orderId: existingOrder._id, txnid, status });
-                    }
-                } else {
+                if (existingOrder && !existingOrder.isPaid && status === 'success') {
+                    await handleSuccessfulPayment(existingOrder, {
+                        txnid,
+                        id: data.mihpayid || txnid,
+                        status,
+                        email: data.email,
+                        firstname: data.firstname,
+                        context: 'redirect handler'
+                    });
+                    logger.info('Order updated from PayU return', { orderId: existingOrder._id, txnid, status });
+                } else if (!existingOrder) {
                     logger.warn('No order found for txnid on PayU return', { txnid });
                 }
             }
@@ -248,12 +328,13 @@ exports.payuWebhook = async (req, res) => {
         if (existingOrder) {
             // Idempotent update: only mark paid if not already
             if (!existingOrder.isPaid) {
-                existingOrder.isPaid = true;
-                existingOrder.paidAt = new Date();
-                existingOrder.paymentResult = { id: txnid, status };
-                // Set to 'confirmed' when payment is verified by PayU
-                existingOrder.status = 'confirmed';
-                await existingOrder.save();
+                await handleSuccessfulPayment(existingOrder, {
+                    txnid,
+                    status,
+                    email: data.email || email,
+                    firstname: data.firstname || firstname,
+                    context: 'webhook'
+                });
             } else {
                 // Ensure status is at least 'confirmed' for already-paid orders
                 if (existingOrder.status !== 'confirmed') {

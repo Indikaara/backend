@@ -46,6 +46,14 @@ const orderSchema = new mongoose.Schema({
         status: String,
         update_time: String,
         email_address: String,
+        firstname: String,
+    },
+    emailSent: {
+        type: Boolean,
+        default: false,
+    },
+    emailSentAt: {
+        type: Date,
     },
     totalPrice: {
         type: Number,

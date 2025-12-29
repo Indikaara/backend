@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4CAF50;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #4CAF50;
+            margin: 0;
+            font-size: 28px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .status-paid {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .status-pending {
+            background-color: #FFC107;
+            color: #333;
+        }
+        .order-info {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .order-info p {
+            margin: 8px 0;
+        }
+        .order-info strong {
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table thead {
+            background-color: #4CAF50;
+            color: white;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        table th {
+            font-weight: bold;
+        }
+        table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .total-row {
+            font-weight: bold;
+            font-size: 18px;
+            background-color: #f0f0f0;
+        }
+        .total-row td {
+            padding: 15px 12px;
+            border-top: 2px solid #4CAF50;
+        }
+        .shipping-address {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .shipping-address h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #777;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            table th, table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Order Confirmation</h1>
+        </div>
+
+        <p>Dear <strong>{{customerName}}</strong>,</p>
+        <p>Thank you for your order! We're pleased to confirm that we've received your order.</p>
+
+        <div class="order-info">
+            <p><strong>Order ID:</strong> {{orderId}}</p>
+            <p><strong>Transaction ID:</strong> {{transactionId}}</p>
+            <p><strong>Order Date:</strong> {{orderDate}}</p>
+            <p><strong>Payment Status:</strong> <span class="status-badge {{statusClass}}">{{paymentStatus}}</span></p>
+        </div>
+
+        <h2 style="color: #4CAF50; margin-top: 30px;">Order Details</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each products}}
+                <tr>
+                    <td>{{this.name}}</td>
+                    <td style="text-align: center;">{{this.quantity}}</td>
+                    <td style="text-align: right;">{{this.price}}</td>
+                    <td style="text-align: right;">{{this.total}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3" style="text-align: right;">Total Amount:</td>
+                    <td style="text-align: right;">{{totalPrice}}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        {{#if shippingAddress}}
+        <div class="shipping-address">
+            <h3>Shipping Address</h3>
+            <p>{{shippingAddress.address}}</p>
+            {{#if shippingAddress.city}}
+            <p>{{shippingAddress.city}}{{#if shippingAddress.state}}, {{shippingAddress.state}}{{/if}} {{shippingAddress.postalCode}}</p>
+            {{/if}}
+            {{#if shippingAddress.country}}
+            <p>{{shippingAddress.country}}</p>
+            {{/if}}
+        </div>
+        {{/if}}
+
+        <p style="margin-top: 30px;">We will send you a shipping confirmation email as soon as your order ships.</p>
+        <p>If you have any questions about your order, please contact our support team.</p>
+
+        <div class="footer">
+            <p>Thank you for shopping with <strong>Indikara</strong>!</p>
+            <p>Need help? Contact us at <a href="mailto:support@indikara.com">support@indikara.com</a></p>
+            <p style="margin-top: 15px; font-size: 12px; color: #999;">
+                This is an automated email. Please do not reply to this message.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
