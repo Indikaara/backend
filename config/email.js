@@ -18,6 +18,17 @@ const emailConfig = {
 let transporter = null;
 
 const createTransporter = () => {
+    logger.info('Email config debug', {
+        enabled: emailConfig.enabled,
+        host: emailConfig.host,
+        port: emailConfig.port,
+        secure: emailConfig.secure,
+        hasUser: !!emailConfig.auth.user,
+        hasPass: !!emailConfig.auth.pass,
+        user: emailConfig.auth.user ? '***' + emailConfig.auth.user.slice(-10) : 'undefined',
+        from: emailConfig.from
+    });
+
     if (!emailConfig.enabled) {
         logger.info('Email sending is disabled via EMAIL_ENABLED environment variable');
         return null;
@@ -29,7 +40,7 @@ const createTransporter = () => {
     }
 
     try {
-        transporter = nodemailer.createTransporter({
+        transporter = nodemailer.createTransport({
             host: emailConfig.host,
             port: emailConfig.port,
             secure: emailConfig.secure,

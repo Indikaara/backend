@@ -178,8 +178,33 @@ Thank you for shopping with Indikara!`;
      * @private
      */
     static async _sendEmail(mailOptions, order) {
-        const info = await transporter.sendMail(mailOptions);
-        return info;
+        try {
+            logger.info('Attempting to send email', {
+                orderId: order._id,
+                to: mailOptions.to,
+                subject: mailOptions.subject,
+                from: mailOptions.from
+            });
+            
+            const info = await transporter.sendMail(mailOptions);
+            
+            logger.info('Email sent successfully', {
+                orderId: order._id,
+                messageId: info.messageId,
+                response: info.response
+            });
+            
+            return info;
+        } catch (error) {
+            logger.error('SMTP sendMail error', {
+                orderId: order._id,
+                error: error.message,
+                code: error.code,
+                command: error.command,
+                stack: error.stack
+            });
+            throw error;
+        }
     }
 
     /**
