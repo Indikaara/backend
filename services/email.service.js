@@ -174,16 +174,20 @@ Thank you for shopping with Indikara!`;
     }
 
     /**
-     * Send email via transporter
+     * Send email via transporter with retry logic
      * @private
      */
-    static async _sendEmail(mailOptions, order) {
+    static async _sendEmail(mailOptions, order, retryCount = 0) {
+        const maxRetries = 2;
+        const retryDelay = 2000; // 2 seconds
+
         try {
             logger.info('Attempting to send email', {
                 orderId: order._id,
                 to: mailOptions.to,
                 subject: mailOptions.subject,
-                from: mailOptions.from
+                from: mailOptions.from,
+                attempt: retryCount + 1
             });
             
             const info = await transporter.sendMail(mailOptions);
@@ -196,11 +200,35 @@ Thank you for shopping with Indikara!`;
             
             return info;
         } catch (error) {
+            // Retry on connection timeout or network errors
+            const isRetryableError = error.code === 'ETIMEDOUT' || 
+                                   error.code === 'ECONNRESET' || 
+                                   error.code === 'ECONNREFUSED' ||
+                                   error.message.includes('Connection timeout') ||
+                                   error.message.includes('timeout');
+
+            if (isRetryableError && retryCount < maxRetries) {
+                logger.warn('Email send failed, retrying...', {
+                    orderId: order._id,
+                    error: error.message,
+                    code: error.code,
+                    attempt: retryCount + 1,
+                    maxRetries: maxRetries
+                });
+
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+                
+                // Retry
+                return this._sendEmail(mailOptions, order, retryCount + 1);
+            }
+
             logger.error('SMTP sendMail error', {
                 orderId: order._id,
                 error: error.message,
                 code: error.code,
                 command: error.command,
+                retries: retryCount,
                 stack: error.stack
             });
             throw error;

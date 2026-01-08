@@ -2,10 +2,12 @@ const nodemailer = require('nodemailer');
 const { logger } = require('./logger');
 
 // Email configuration from environment variables
+// Note: Render.com and many cloud platforms block port 465, use 587 with STARTTLS instead
 const emailConfig = {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT || '587', 10),
     secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for 587
+    requireTLS: process.env.EMAIL_PORT === '587', // Require TLS for port 587
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
@@ -40,11 +42,32 @@ const createTransporter = () => {
     }
 
     try {
+        // For cloud platforms like Render.com, port 587 with STARTTLS works better than 465
+        // If port 465 is specified but we're on a cloud platform, log a warning
+        const isCloudPlatform = process.env.RENDER || process.env.VERCEL || process.env.HEROKU;
+        
+        if (isCloudPlatform && emailConfig.port === 465) {
+            logger.warn('Port 465 may be blocked on cloud platforms. Consider using port 587 with STARTTLS.', {
+                platform: process.env.RENDER ? 'Render.com' : process.env.VERCEL ? 'Vercel' : process.env.HEROKU ? 'Heroku' : 'Unknown'
+            });
+        }
+
         transporter = nodemailer.createTransport({
             host: emailConfig.host,
             port: emailConfig.port,
-            secure: emailConfig.secure,
-            auth: emailConfig.auth
+            secure: emailConfig.secure, // true for 465 (SSL), false for 587 (STARTTLS)
+            requireTLS: !emailConfig.secure && emailConfig.port === 587, // Require TLS for port 587
+            auth: emailConfig.auth,
+            connectionTimeout: 60000, // 60 seconds
+            greetingTimeout: 30000, // 30 seconds
+            socketTimeout: 60000, // 60 seconds
+            pool: false, // Disable pooling on cloud platforms to avoid connection issues
+            tls: {
+                // Do not fail on invalid certificates (some SMTP servers have self-signed certs)
+                rejectUnauthorized: false,
+                // Allow older TLS versions for compatibility
+                minVersion: 'TLSv1'
+            }
         });
 
         logger.info('Email transporter created successfully', {
@@ -63,8 +86,30 @@ const createTransporter = () => {
 // Initialize transporter
 transporter = createTransporter();
 
+// Verify SMTP connection
+const verifyConnection = async () => {
+    if (!transporter) {
+        logger.warn('Cannot verify connection: transporter not configured');
+        return false;
+    }
+
+    try {
+        await transporter.verify();
+        logger.info('SMTP connection verified successfully');
+        return true;
+    } catch (error) {
+        logger.error('SMTP connection verification failed', {
+            error: error.message,
+            code: error.code,
+            command: error.command
+        });
+        return false;
+    }
+};
+
 module.exports = {
     transporter,
     emailConfig,
-    createTransporter
+    createTransporter,
+    verifyConnection
 };
